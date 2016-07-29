@@ -5,6 +5,7 @@
 #include <time.h>
 #include <sstream>
 #include <iostream>
+#include <algorithm>
 #include <fstream>
 
 extern "C"
