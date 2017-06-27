@@ -24,10 +24,13 @@ int main()
 	if (hhook == nullptr)
 		std::cerr << "hhook = " << GetLastError() << std::endl;
 	LPMSG Msg = nullptr;
-	while (GetMessage(Msg, NULL, 0, 0) > 0)
+	while (Msg == nullptr || WM_QUIT != Msg->message)
 	{
-		TranslateMessage(Msg);
-		DispatchMessage(Msg);
+		while (PeekMessage(Msg, nullptr, 0, 0, PM_REMOVE) > 0)
+		{
+			TranslateMessage(Msg);
+			DispatchMessage(Msg);
+		}
 	}
 	UnhookWindowsHookEx(hhook);
 	return 0;
