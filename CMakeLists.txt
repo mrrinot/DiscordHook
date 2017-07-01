@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.0)
 
-project(GhostRunner)
+project(DiscordHook)
 
-set(GR_NAME GhostRunner)
+set(DH_NAME DiscordHook)
 
 set(CMAKE_DEBUG_POSTFIX "_d")
 
@@ -10,18 +10,11 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-set(GR_COMMON_DIR ${CMAKE_CURRENT_LIST_DIR}/Common)
-set(GR_SOUND_ENGINE_DIR ${CMAKE_CURRENT_LIST_DIR}/SoundEngine)
-set(GR_PHYSIC_ENGINE_DIR ${CMAKE_CURRENT_LIST_DIR}/PhysicEngine)
-set(GR_INPUT_ENGINE_DIR ${CMAKE_CURRENT_LIST_DIR}/InputEngine)
+set(DH_CLIENT   ${CMAKE_CURRENT_LIST_DIR}/Client)
+set(DH_DLL      ${CMAKE_CURRENT_LIST_DIR}/DLL)
 
-SET(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/SFML/cmake/Modules")
-set(SFML_ROOT "${CMAKE_CURRENT_LIST_DIR}/SFML" CACHE PATH "Path to SFML root directory")
-
-add_subdirectory(${GR_COMMON_DIR})
-add_subdirectory(${GR_SOUND_ENGINE_DIR})
-add_subdirectory(${GR_PHYSIC_ENGINE_DIR})
-add_subdirectory(${GR_INPUT_ENGINE_DIR})
+add_subdirectory(${DH_CLIENT})
+add_subdirectory(${DH_DLL})
 
 set(GR_SRC_DIR ${CMAKE_CURRENT_LIST_DIR}/src)
 set(GR_INC_DIR ${CMAKE_CURRENT_LIST_DIR}/include)
