@@ -3,6 +3,7 @@
 #include "windows.h"
 #include <Psapi.h>
 #include <cstdio>
+#include <ShlObj.h>
 #include <tlhelp32.h>
 #include <time.h>
 #include <share.h>

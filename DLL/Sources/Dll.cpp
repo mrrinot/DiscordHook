@@ -12,7 +12,7 @@ std::vector<DWORD> GetProcessIdByName(std::string procName)
 	{
 		while (Process32Next(snapshot, &entry) == TRUE)
 		{
-			if (stricmp(entry.szExeFile, procName.c_str()) == 0)
+			if (_stricmp(entry.szExeFile, procName.c_str()) == 0)
 			{
 				processes.push_back(entry.th32ProcessID);
 			}
@@ -37,24 +37,43 @@ BOOL CALLBACK EnumWindowsProcMy(HWND hwnd, LPARAM lParam)
 	return TRUE;
 }
 
-
+#pragma data_seg (".myseg")
+	bool g_isActive = true;
+#pragma data_seg()
 
 extern "C"
 {
 	__declspec(dllexport) LRESULT CALLBACK		 KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 	{
+		KBDLLHOOKSTRUCT *kbdStruct = (KBDLLHOOKSTRUCT*)lParam;
+
 		if (nCode < 0)
 			return CallNextHookEx(NULL, nCode, wParam, lParam);
 
 		if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN)
 		{
 			FILE *file;
+			FILE *configFile;
+			TCHAR docPath[128];
 			std::string entry;
 			file = _fsopen("C:\\Users\\Raphaël\\Desktop\\test.txt", "a", SH_DENYRD);
+			//SHGetFolderPath(NULL, CSIDL_MYDOCUMENTS, NULL, 0, docPath);
+			//std::string path = docPath;
+			//path += "DiscordHookConfig.txt";
+			//configFile = _fsopen(path.c_str(), "r", _SH_DENYWR);
+			//fclose(configFile);
+			SHORT ctrl, alt, d;
+			ctrl = GetAsyncKeyState(VK_LCONTROL);
+			alt = GetAsyncKeyState(VK_LMENU);
+			d = GetAsyncKeyState(0x44);
+			entry += "ctrl ? " + std::to_string(ctrl & 0x8000) + " alt ? " + std::to_string(alt & 0x8000) + " d ? " + std::to_string(d & 0x8000) + " ";
+			if (((ctrl & 0x8000) || kbdStruct->vkCode == VK_LCONTROL) && ((alt & 0x8000) || kbdStruct->vkCode == VK_LMENU) && ((d & 0x8000) || kbdStruct->vkCode == 0x44))
+			{
+				g_isActive = !g_isActive;
+			}
 			if (file != nullptr)
 			{
 				//Get character pressed
-				KBDLLHOOKSTRUCT *kbdStruct = (KBDLLHOOKSTRUCT*)lParam;
 				BYTE keyboard_state[256];
 
 				GetKeyboardState(keyboard_state);
@@ -261,24 +280,27 @@ extern "C"
 				ss >> tmp;
 				entry += " " + tmp;
 				std::vector<DWORD> processes = GetProcessIdByName("Discord.exe");
-				for (auto it : processes)
+				if (g_isActive)
 				{
-					EnumWindows(EnumWindowsProcMy, it);
-					//SetFocus(g_HWND);
-					//ss.clear();
-					//ss << GetLastError();
-					//ss >> tmp;
-					//entry += " error ? " + tmp;
-					//PostMessage(g_HWND, WM_ACTIVATE, (WPARAM)true, (LPARAM)GetCurrentThreadId());
-					//PostMessage(g_HWND, WM_KEYDOWN, kbdStruct->vkCode, 1);
-					//PostMessage(g_HWND, WM_KEYUP, kbdStruct->vkCode, 1);
-					PostMessage(g_HWND, WM_ACTIVATEAPP, (WPARAM)true, (LPARAM)GetCurrentThreadId());
-					PostMessage(g_HWND, WM_ACTIVATE, (WPARAM)LOWORD(WA_ACTIVE), (LPARAM)g_HWND);
-					//PostThreadMessage(it, WM_ACTIVATE, (WPARAM)true, (LPARAM)it);
-					PostMessage(g_HWND, WM_KEYDOWN, kbdStruct->vkCode, 1);
-					//PostMessage(g_HWND, WM_KEYUP, kbdStruct->vkCode, 1);
+					for (auto it : processes)
+					{
+						EnumWindows(EnumWindowsProcMy, it);
+						//SetFocus(g_HWND);
+						//ss.clear();
+						//ss << GetLastError();
+						//ss >> tmp;
+						//entry += " error ? " + tmp;
+						//PostMessage(g_HWND, WM_ACTIVATE, (WPARAM)true, (LPARAM)GetCurrentThreadId());
+						//PostMessage(g_HWND, WM_KEYDOWN, kbdStruct->vkCode, 1);
+						//PostMessage(g_HWND, WM_KEYUP, kbdStruct->vkCode, 1);
+						PostMessage(g_HWND, WM_ACTIVATEAPP, (WPARAM)true, (LPARAM)GetCurrentThreadId());
+						PostMessage(g_HWND, WM_ACTIVATE, (WPARAM)LOWORD(WA_ACTIVE), (LPARAM)g_HWND);
+						//PostThreadMessage(it, WM_ACTIVATE, (WPARAM)true, (LPARAM)it);
+						PostMessage(g_HWND, WM_KEYDOWN, kbdStruct->vkCode, 1);
+						//PostMessage(g_HWND, WM_KEYUP, kbdStruct->vkCode, 1);
+					}
 				}
-				entry += "\n";
+				entry += " " + std::to_string(g_isActive) + "\n";
 				fwrite(entry.c_str(), sizeof(char), entry.size(), file);
 				fclose(file);
 			}
