@@ -3,8 +3,10 @@
 #include <iostream>
 #include <winerror.h>
 
+
 int main()
 {
+	FreeConsole();
 	HOOKPROC hkprc;
 	static HINSTANCE hhookDLL;
 	static HHOOK hhook;
