@@ -1,7 +1,7 @@
 ﻿#include "Header.hh"
 
 #pragma data_seg (".myseg")
-bool g_isActive = true;
+bool g_isActive = false;
 DWORD processID[5] = { 0, 0, 0, 0, 0 };
 #pragma data_seg()
 
@@ -66,7 +66,10 @@ extern "C"
 			if (((ctrl & 0x8000) || kbdStruct->vkCode == VK_LCONTROL)
 				&& ((alt & 0x8000) || kbdStruct->vkCode == VK_LMENU)
 				&& ((d & 0x8000) || kbdStruct->vkCode == 0x44))
+			{
 				g_isActive = !g_isActive;
+				return 1;
+			}
 			if (processID[0] == 0)
 			{
 				GetProcessIdByName("Discord.exe");
